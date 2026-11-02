@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raicom-rag"
+version = "0.1.0"
+description = "Local-first RAG assistant for RAICOM sample questions"
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = ["src", "src.core", "src.utils", "scripts"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["models", "storage", ".git", "__pycache__", "reports"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

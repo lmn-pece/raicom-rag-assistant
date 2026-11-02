@@ -1,34 +1,43 @@
-# app.py
-from src.model_loader import load_qwen
 from src.core.brain import RAICOMAgent
+from src.model_loader import load_qwen
 
 
-def main():
-    # 1. 硬件/模型初始化
+def _print_sources(chunks) -> None:
+    if not chunks:
+        return
+    print("\n\n本地资料依据:")
+    for idx, c in enumerate(chunks, start=1):
+        print(
+            f"  [来源{idx}] {c.get('file_name')} 行 {c.get('line_start')}-{c.get('line_end')} "
+            f"chunk_id={c.get('chunk_id')}"
+        )
+
+
+def main() -> None:
     model, tokenizer = load_qwen()
-
-    # 2. 实例化大脑
     agent = RAICOMAgent(model, tokenizer)
 
-    print("\n✅ RAICOM 全栈智能体重构完成。")
-    print("输入 'exit' 退出，输入 'clear' 重置记忆。")
-
+    print("\n本地 RAG 助手已就绪。输入 'exit' 退出，'clear' 清空对话。")
     while True:
-        query = input("\n👤 指挥官指令: ").strip()
-
-        if query.lower() in ['exit', 'quit']:
+        try:
+            query = input("\nUser: ").strip()
+        except (EOFError, KeyboardInterrupt):
             break
-        if query.lower() == 'clear':
-            agent.history = agent.history[:1]  # 只保留 System Prompt
-            print("✨ 记忆已清空")
+        if query.lower() in {"exit", "quit"}:
+            break
+        if query.lower() == "clear":
+            agent.reset()
+            print("对话记忆已清空。")
             continue
         if not query:
             continue
 
-        # 3. 让大脑处理逻辑
-        final_response = agent.think_and_act(query)
-
-        print("\n" + "-"*30)
+        print("\nAssistant: ", end="", flush=True)
+        answer = agent.answer(query, stream=True)
+        if not agent.last_streamed:
+            print(answer)
+        _print_sources(agent.last_chunks)
+        print()
 
 
 if __name__ == "__main__":
